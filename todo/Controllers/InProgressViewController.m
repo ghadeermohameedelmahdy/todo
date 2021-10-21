@@ -24,9 +24,8 @@
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
-   //model
     model = [[Model alloc] init];
-    arraySearch = [NSMutableArray new];
+    
     _searchBar.delegate = self;
     _tableView.delegate = self;
     _tableView.dataSource = self;
@@ -35,7 +34,7 @@
 }
 -(void)viewDidAppear:(BOOL)animated{
     inprogress = [NSMutableArray new];
-
+    arraySearch = [NSMutableArray new];
     [self refereshTable];
 }
 
@@ -168,6 +167,7 @@ return @[deleteAction,editAction];
 }
 
 -(void) refereshTable{
+    [self loadDataFromModel];
     [_tableView reloadData];
 }
 

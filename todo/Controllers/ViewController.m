@@ -1,32 +1,29 @@
 //
-//  PriorityViewController.m
+//  ViewController.m
 //  todo
 //
 //  Created by Ghadeer El-Mahdy on 3/23/20.
 //  Copyright © 2020 Ghadeer El-Mahdy. All rights reserved.
 //
 
-#import "PriorityViewController.h"
+#import "ViewController.h"
 #import "NoteViewController.h"
-@interface PriorityViewController ()
+#import "PriorityViewController.h"
+@interface ViewController ()
 
 @end
 
-@implementation PriorityViewController
+@implementation ViewController
 {
     NoteViewController* noteController ;
     Model* model;
     NSMutableArray* arraySearch;
     NSMutableArray* allData;
-    NSMutableArray* lowPrio;
-    NSMutableArray* highPrio;
-    NSMutableArray* medPrio;
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
    //model
     model = [[Model alloc] init];
-    arraySearch = [NSMutableArray new];
     _searchBar.delegate = self;
     _tableView.delegate = self;
     _tableView.dataSource = self;
@@ -34,74 +31,56 @@
     
 }
 -(void)viewDidAppear:(BOOL)animated{
-  
+    arraySearch = [NSMutableArray new];
     [self refereshTable];
 }
 
 - (IBAction)addBarBtn:(id)sender {
     noteController = [[self storyboard] instantiateViewControllerWithIdentifier:@"note"];
-    lowPrio = [NSMutableArray new];
-    medPrio= [NSMutableArray new];
-    highPrio= [NSMutableArray new];
     noteController.isEdit = NO;
     noteController.modalPresentationStyle = UIModalPresentationPopover;
     noteController.viewController = self;
-    
     [self presentViewController:noteController animated:true completion:nil];
+}
+
+- (IBAction)statusAction:(UISegmentedControl *)sender {
+    sender.selectedSegmentIndex = 1;
 }
 
 #pragma mark - table view delegate methods
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return 3;
+    return 1;
 }
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    if(section == 0)
-           return [highPrio count];
-       else  if(section == 1)
-             return [medPrio count];
-       else  if(section == 2)
-              return [lowPrio count];
-    return 0;
+    return [allData count];
 }
 
 - (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
-    UITableViewCell* cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"prioritycell"];
+    UITableViewCell* cell = [[UITableViewCell alloc] initWithStyle: UITableViewCellStyleSubtitle reuseIdentifier:@"todocell"] ;
     
-          TODO* todo ;
-          switch (indexPath.section) {
-              case 0:
-                  todo = [highPrio objectAtIndex:indexPath.row];
-                  break;
-              case 1:
-                  todo = [medPrio objectAtIndex:indexPath.row];
-                  break;
-              case 2:
-                  todo = [lowPrio objectAtIndex:indexPath.row];
-                  break;
-              default:
-                  break;
-          }
+    TODO* todo = [allData objectAtIndex:indexPath.row ];
+    NSString* img;
+    if(todo.priority == 0)
+          img = @"low.png";
+    else  if(todo.priority == 1)
+           img = @"med.png";
+    else  if(todo.priority == 2)
+           img = @"high.png";
+          
     cell.textLabel.text = todo.title;
     cell.detailTextLabel.text = todo.desc;
-   
+    cell.imageView.image = [UIImage imageNamed:img];
+
     return cell;
 }
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
     NSString* title;
-   
-    switch (section) {
-              case 0:
-               title = @"High Priority";
-                  break;
-              case 1:
-               title = @"Meduim Priority";
-                  break;
-              case 2:
-               title = @"Low Priority";
-                  break;
-               default:
-               break;
-          }
+    if([allData count] ==0){
+        title = @" No TODOs to show !";
+    }
+    else{
+        title=@"All TODOs";
+    }
     return title;
 }
 
@@ -117,6 +96,7 @@
            self->noteController.todo = todo;
            self->noteController.modalPresentationStyle = UIModalPresentationPopover;
            self->noteController.viewController = self;
+           
            [self presentViewController:self->noteController animated:true completion:nil];
        }];
        editAction.backgroundColor = [UIColor blueColor];
@@ -126,7 +106,8 @@
                                                           handler:^(UIAlertAction * action) {
                               
                                [self->model removeTODO: todo.todoID];
-                               [self refereshTable];
+                               [self->allData removeObject:todo];
+                               [self->_tableView reloadData];
                                 
                            }];
                        [alert addAction:defaultAction ];
@@ -136,6 +117,9 @@
 return @[deleteAction,editAction];
 }
 
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+}
 #pragma mark - search bar delegate methods
 - (void)filterContentForSearchText:(NSString*)searchText
 {
@@ -147,14 +131,10 @@ return @[deleteAction,editAction];
 -(void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText{
     [self filterContentForSearchText:searchText];
     [allData removeAllObjects];
-    [lowPrio removeAllObjects];
-    [medPrio removeAllObjects];
-    [highPrio removeAllObjects];
         TODO* todo;
         NSString *title = @"";
         if ([searchText length] > 0)
         {
-
             for (int i = 0; i < [arraySearch count] ; i++)
             {
                 todo=[arraySearch objectAtIndex:i];
@@ -164,14 +144,8 @@ return @[deleteAction,editAction];
                     NSRange titleResultsRange = [title rangeOfString:searchText options:NSCaseInsensitiveSearch];
                     if (titleResultsRange.length > 0)
                     {
-                                 if(todo.priority == 0)
-                                   [ lowPrio addObject:todo];
-                                 else  if(todo.priority == 1)
-                                     [medPrio addObject:todo];
-                               else  if(todo.priority == 2)
-                                      [highPrio addObject:todo];
-                              [allData addObject:todo];
-                             }
+                        [allData addObject:todo];
+                    }
                 }
             }
         }else{
@@ -187,9 +161,6 @@ return @[deleteAction,editAction];
 }
 -(void)searchBarTextDidEndEditing:(UISearchBar *)searchBar{
     [allData removeAllObjects];
-    [highPrio removeAllObjects];
-    [lowPrio removeAllObjects];
-    [medPrio removeAllObjects];
     [self loadDataFromModel];
     [_tableView reloadData];
 }
@@ -199,18 +170,6 @@ return @[deleteAction,editAction];
 
 -(void) loadDataFromModel{
     allData = [model getAllTODO];
-    lowPrio = [NSMutableArray new];
-    medPrio= [NSMutableArray new];
-    highPrio= [NSMutableArray new];
-    for(int i=0;i< [allData count] ; i++){
-      TODO* todo = [allData objectAtIndex:i];
-          if(todo.priority == 0)
-            [ lowPrio addObject:todo];
-          else  if(todo.priority == 1)
-              [medPrio addObject:todo];
-        else  if(todo.priority == 2)
-               [highPrio addObject:todo];
-      }
     [arraySearch addObjectsFromArray:allData];
 }
 
@@ -218,7 +177,4 @@ return @[deleteAction,editAction];
     [self loadDataFromModel];
     [_tableView reloadData];
 }
-
-
 @end
-

@@ -1,16 +1,15 @@
 //
-//  UIViewController+alert.m
+//  AppDelegate.h
 //  todo
 //
 //  Created by Ghadeer El-Mahdy on 3/23/20.
 //  Copyright © 2020 Ghadeer El-Mahdy. All rights reserved.
 //
 
-#import "UIViewController+alert.h"
+#import <UIKit/UIKit.h>
 
-#import <AppKit/AppKit.h>
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 
-
-@implementation UIViewController (alert)
 
 @end
+

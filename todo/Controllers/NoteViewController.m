@@ -35,6 +35,17 @@
         NSDateFormatter *dateFormatter=[[NSDateFormatter alloc] init];
         [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
         _dateCreationLbl.text = [dateFormatter stringFromDate:_todo.creationDate];
+        [_statusOutlet setHidden:NO];
+        [_statusLbl setHidden:NO];
+        if(_todo.status == 1){
+            [_statusOutlet setSelectedSegmentIndex:0];
+            [_statusOutlet setSelectedSegmentTintColor:UIColor.yellowColor];
+            [_statusOutlet setEnabled:NO forSegmentAtIndex:1];
+        }else  if(_todo.status == 2){
+             [_statusOutlet setSelectedSegmentIndex:1];
+            [_statusOutlet setSelectedSegmentTintColor:UIColor.greenColor];
+            [_statusOutlet setEnabled:NO forSegmentAtIndex:0];
+        }
         
     }else{
         _todo = [TODO new];
@@ -42,11 +53,52 @@
            [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
              currentDate = [NSDate date];
            _dateCreationLbl.text = [dateFormatter stringFromDate:currentDate];
+        [_statusOutlet setHidden:YES];
+         [_statusLbl setHidden:YES];
     }
 }
 
 
+- (IBAction)dateAction:(UIDatePicker *)sender {
+}
+
 - (IBAction)alarmBtn:(UIButton *)sender {
+    _localNotification  = [[UNMutableNotificationContent alloc] init];
+    _localNotification.title = [NSString localizedUserNotificationStringForKey:@"Time Down!" arguments:nil];
+    _localNotification.body = [NSString localizedUserNotificationStringForKey:@"Your notification is arrived!"
+                                                                   arguments:nil];
+    _localNotification.sound = [UNNotificationSound defaultSound];
+    
+    // 1. set trigger
+    //----------------------------
+    // Deliver the notification with date:
+    //-------------------------------------
+    //NSDate *myDate = [NSDate dateWithTimeIntervalSinceNow:1000];
+    // NSDateComponents *dateComponents = [[NSCalendar currentCalendar] components:NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond fromDate:myDate];
+    //UNCalendarNotificationTrigger *trigger = [UNCalendarNotificationTrigger triggerWithDateMatchingComponents:dateComponents repeats:NO];
+    
+    // Deliver the notification in seconds
+    //-------------------------------------
+     UNTimeIntervalNotificationTrigger* trigger = [UNTimeIntervalNotificationTrigger
+                                                   triggerWithTimeInterval:5 repeats:NO];
+
+    // 2. set icon badge to +1
+    //------------------------
+    _localNotification.badge = @([[UIApplication sharedApplication] applicationIconBadgeNumber] + 1);
+    
+    // 3. schedule localNotification
+    //------------------------------
+    UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:@"Time Down"
+                                                                          content:_localNotification trigger:trigger];
+    
+    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+    [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
+        if (!error) {
+            NSLog(@"Add NotificationRequest succeeded!");
+        }
+    }];
+    [[[UIApplication sharedApplication] delegate] application:[UIApplication sharedApplication] didReceiveRemoteNotification:center fetchCompletionHandler:nil];
+
 }
 - (IBAction)addBtnAction:(UIButton *)sender {
     if([_addOutlet.titleLabel.text isEqual:@"Add"]){
@@ -54,6 +106,7 @@
            [ self showErrorMessage:@"Data is missing!" :@"Title & Description fields are required to add TODO!"];
         }else{
             _todo.todoID = [model generateID];
+            _todo.status = 0;
             [self setTODOData];
             [model addTODO:_todo];
             [self dismissViewControllerAnimated:true completion:^{
@@ -82,6 +135,7 @@
 }
 
 - (IBAction)status:(UISegmentedControl *)sender {
+   _todo.status = sender.selectedSegmentIndex + 1;
 }
 
 -(NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView{
@@ -102,7 +156,8 @@
      _todo.desc = _descNote.text;
      _todo.title = _titleNote.text;
      _todo.complitionDate = nil;
-     _todo.status = 0;
      _todo.creationDate = currentDate;
 }
+
 @end
+
